@@ -38,7 +38,7 @@ class clock_CNN:
         self.num_classes = 12
         self.batch_size = 32
         self.num_epochs = 10
-        self.image_shape=(150,150,1)
+        self.image_shape = (150, 150, 1)
         self.filename = 'test'
 
         self.build_model()
@@ -46,14 +46,14 @@ class clock_CNN:
     
     def build_model(self):
         self.model = keras.models.Sequential()
-        self.model.add(Conv2D(32, kernel_size=(3,3), activation='relu', input_shape=self.image_shape))
+        self.model.add(Conv2D(64, kernel_size=(5, 5), activation='relu', input_shape=self.image_shape))
         self.model.add(MaxPooling2D(pool_size=(2, 2)))
-        self.model.add(Conv2D(64, (3,3), activation='relu'))
+        self.model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
         self.model.add(MaxPooling2D(pool_size=(2, 2)))
-        self.model.add(Dropout(0.25))
+        self.model.add(Dropout(0.22))
         self.model.add(Flatten())
         self.model.add(Dense(128, activation='relu'))
-        self.model.add(Dropout(0.5))
+        self.model.add(Dropout(0.2))
         self.model.add(Dense(self.num_classes, activation='softmax'))
     
     def convert_labels(self,labels):
@@ -85,11 +85,23 @@ class clock_CNN:
         with open(self.filename, 'a') as f:
             print(input, file=f)
 
+    def cyclic_loss(self, y_true, y_pred):
+        errors =  tf.math.minimum(tf.abs((y_true - y_pred) % 12), tf.abs((y_pred - y_true) % 12))
+        
+        is_small_error = tf.abs(errors) < self.num_classes//2
+        squared_loss = tf.square(errors)/2
+        linear_loss = tf.abs(errors) - 0.5
+
+        return tf.where(is_small_error, squared_loss, linear_loss)
+
     def train_model(self):                                             
-        self.model.compile(loss='sparse_categorical_crossentropy', 
-                           optimizer="sgd", 
-                           metrics=["accuracy"],
-                           )   # optimizer = keras.optimizers.SGD(lr=0.01)
+        self.model.compile(
+                # loss='sparse_categorical_crossentropy', 
+                loss=self.cyclic_loss, 
+                optimizer = keras.optimizers.SGD(learning_rate=10),
+                # optimizer="sgd", 
+                metrics=["accuracy"],
+        )
         
         self.history = self.model.fit(self.train_images, self.train_labels, 
                                       epochs=self.num_epochs, 
