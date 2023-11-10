@@ -24,8 +24,8 @@ def plot_data():
     
     # colors = cm(np.linspace(0,1,len(classifiers_sorted)))
     fig, (ax1, ax2) = plt.subplots(1,2, 
-                                   figsize=[7,2.65], 
-                                   dpi=200, 
+                                   figsize=[10,3], 
+                                   dpi=150, 
                                 #    layout='tight', 
                                    sharey=True, 
                                    sharex=True,
@@ -72,8 +72,8 @@ def plot_data():
         #           zorder=0,
         #           )
 
-    plt.savefig('reportfigs/accuracy_curves.pdf')
-    plt.savefig('reportfigs/accuracy_curves.png')
+    plt.savefig('../reportfigs/accuracy_curves.pdf')
+    plt.savefig('../reportfigs/accuracy_curves.png')
     plt.show()
 
 

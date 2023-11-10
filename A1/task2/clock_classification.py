@@ -1,3 +1,4 @@
+#%%
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
@@ -13,13 +14,13 @@ DATASET_PREFIX = 'clock_150/'
 # DATASET_PREFIX = '/kaggle/input/clock-images/'
 # DATASET_PREFIX = '/kaggle/input/clock-downsized/'
 
-
+#%%
 class ClockClassifier:
     FILENAME_LABELS = DATASET_PREFIX + 'labels.npy'
     FILENAME_IMAGES = DATASET_PREFIX + 'images.npy'
     def __init__(self,
                 num_classes=24,
-                batch_size=128,
+                batch_size=32,
                 num_epochs=20,
                 test_fraction=.2,
                 ):
@@ -117,11 +118,6 @@ class ClockClassifier:
         test_images, test_labels = self.testset_for_test_acc()
         return self.model.evaluate(test_images, test_labels)[1]
         
-    @property
-    def num_steps(self):
-        train_dataset, test_dataset = self.read_dataset()
-        return len(train_dataset)//self.batch_size
-        
     def final_common_sense_accuracy(self):
         """prints/returns the mean deviation in minutes of the final model on the test set"""
         test_images, y_true = self.testset_for_common_sense_acc()
@@ -167,3 +163,15 @@ class ClockClassifier:
                 batch_size=self.batch_size,
                 callbacks=[early_stopping_cb],
         )
+#%%
+classifier = ClockClassifier(num_classes=12, batch_size=32, num_epochs=2)
+classifier.train_model()
+
+#%%
+classifier.final_common_sense_accuracy()
+
+#%%
+# save model for future plotting
+model_filename = f"classifier_n12_bestmodel.pk"
+with open(model_filename, 'wb') as f:
+    pk.dump(classifier, f)

@@ -12,16 +12,14 @@ from keras import backend as K
 # DATASET_PREFIX = 'clock_data/'
 
 # DATASET_PREFIX = '/kaggle/input/clock-images/'
-DATASET_PREFIX = 'clock_75/'
-labels = np.load(DATASET_PREFIX + 'labels.npy')
-images = np.load(DATASET_PREFIX + 'images.npy')
+DATASET_PREFIX = 'clock_150/'
 
 #%%
 class ClockMultihead:
     FILENAME_LABELS = DATASET_PREFIX + 'labels.npy'
     FILENAME_IMAGES = DATASET_PREFIX + 'images.npy'
     def __init__(self,
-                batch_size=128,
+                batch_size=32,
                 num_epochs=20,
                 ):
         self.batch_size = batch_size
@@ -76,14 +74,6 @@ class ClockMultihead:
     def read_dataset():
         return np.load(ClockMultihead.FILENAME_IMAGES), np.load(ClockMultihead.FILENAME_LABELS)
     
-    @staticmethod
-    def labels_to_float(labels):
-        """
-        Converts tuple labels to integers for classification
-        """
-        labels_base_720 = labels[:,0]*60 + labels[:,1]
-        return tf.cast(labels_base_720, tf.float32)
-    
     def shuffle_data(self):
         images, labels = ClockMultihead.read_dataset()
         rng = np.random.default_rng(seed=10)
@@ -102,10 +92,6 @@ class ClockMultihead:
         returns hours and minutes as separate labels (maybe doesn't have to be a function lol)
         """
         return labels[:,0], labels[:,1].astype('float32')
-    
-    @staticmethod
-    def hrs_mins_to_base720(hrs, mins):
-        return hrs*12 + mins
     
     def prep_data(self):
         images, labels = self.shuffle_data()
@@ -158,5 +144,14 @@ class ClockMultihead:
                                       )
 #%%
 
-myCNN = clock_CNN_multihead(images, labels, batch_size=128, num_epochs=2)
-myCNN.train_model()
+multihead = ClockMultihead(batch_size=32, num_epochs=20)
+multihead.train_model()
+
+#%%
+
+cyclic_error = multihead.common_sense_accuracy()
+print(f"Mean deviation: {np.mean(cyclic_error)} minutes")
+
+fig, ax = plt.subplots(1,1, figsize=[6,4])
+ax.hist(cyclic_error)
+plt.show()

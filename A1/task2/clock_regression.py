@@ -1,3 +1,4 @@
+#%%
 import tensorflow as tf
 from tensorflow import keras
 import pandas as pd
@@ -9,14 +10,14 @@ from keras import backend as K
 import pickle as pk
 
 # DATASET_PREFIX = 'drive/MyDrive/idl/datasets/'
-DATASET_PREFIX = '/kaggle/input/clock-images/'
-
-
+# DATASET_PREFIX = '/kaggle/input/clock-images/'
+DATASET_PREFIX = 'clock_150/'
+#%%
 class ClockRegressor:
     FILENAME_LABELS = DATASET_PREFIX + 'labels.npy'
     FILENAME_IMAGES = DATASET_PREFIX + 'images.npy'
     def __init__(self,
-                batch_size=128,
+                batch_size=32,
                 num_epochs=20,
                 test_fraction=.2,
                 ):
@@ -107,30 +108,7 @@ class ClockRegressor:
     def final_test_accuracy(self):
         test_images, test_labels = self.testset_for_test_acc()
         return self.model.evaluate(test_images, test_labels)[1]
-        
-    @property
-    def num_steps(self):
-        train_dataset, test_dataset = self.read_dataset()
-        return len(train_dataset)//self.batch_size
-        
-    def final_common_sense_accuracy(self):
-        """prints/returns the mean deviation in minutes of the final model on the test set"""
-        test_images, y_true = self.testset_for_test_acc()
-        
-        output = self.model.predict(test_images)
-        y_pred = tf.math.mod(output, 720)
-#         y_pred = (tf.cast(tf.math.argmax(output, axis=1), tf.float64) + .5) * 720/self.num_classes
-        
-        linear_error = tf.math.abs(y_true - y_pred)
-        cyclic_error = tf.cast(tf.minimum(720 - linear_error, linear_error), tf.float32)
-        mean_error = tf.reduce_mean(cyclic_error)
-        
-        print(mean_error)
-        plt.hist(cyclic_error)
-        plt.show()
-        
-        return mean_error
-    
+
     def common_sense_error(self, y_true, y_pred):
         y_pred = tf.math.mod(y_pred, 720)
         
@@ -171,6 +149,10 @@ class ClockRegressor:
                 batch_size=self.batch_size,
                 callbacks=[early_stopping_cb],
         )
-myCNN = ClockRegressor(batch_size=32, num_epochs=2)
-myCNN.train_model()
-myCNN.model.evaluate(myCNN.test_dataset)
+
+#%%
+regressor = ClockRegressor(batch_size=32, num_epochs=2)
+regressor.train_model()
+
+#%%
+print(f"Mean deviation: {regressor.final_test_accuracy} minutes")
